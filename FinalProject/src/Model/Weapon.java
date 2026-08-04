@@ -29,13 +29,15 @@ public class Weapon extends Item {
         return equipped;
     }
     
-    public String toString() {
-        return super.toString() + String.format(" [+%d damage]%s",
-                attackDamage, equipped ? " (equipped)" : "");
-    }
     
     public void equip(Character target) {
     	target.setAttackPower(target.getAttackPower() + attackDamage);
     	equipped = true;
+    }
+    
+    @Override
+    public String toString() {
+        return super.toString() + String.format(" [+%d damage]%s",
+                attackDamage, equipped ? " (equipped)" : "");
     }
 }

@@ -21,7 +21,7 @@ public class Potion extends Item {
     public void setHealAmount(int healAmount) {
         this.healAmount = healAmount;
     }
-
+    @Override
     public String toString() {
         return super.toString() + String.format(" [Heals %d HP]", healAmount);
     }
