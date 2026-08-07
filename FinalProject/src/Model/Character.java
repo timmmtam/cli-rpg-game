@@ -7,6 +7,7 @@ public abstract class Character {
     private int level;
     private int attackPower;
     private int defense;
+    private PlayerInventory inventory;
     
     public Character(String name, int maxHealth, int level, int attackPower, int defense) {
         this.name = name;
@@ -15,7 +16,7 @@ public abstract class Character {
         this.level = level;
         this.attackPower = attackPower;
         this.defense = defense;
-        
+        this.inventory = new PlayerInventory(10);
     }
     
     public String getName() {
@@ -65,7 +66,14 @@ public abstract class Character {
     public void setDefense(int defense) {
         this.defense = defense;
     }
-    
+
+
+    public PlayerInventory getInventory() { 
+    	return inventory; 
+    } 
+    public abstract void attack(Enemy target); 
+
+    @Override
     public String toString() {
         return String.format("%s [Lv.%d %s] HP: %d/%d",
                 name, level, getClass().getSimpleName(), health, maxHealth);

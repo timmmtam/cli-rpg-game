@@ -44,7 +44,7 @@ public abstract class Item {
         }
     }
 
-
+    @Override
     public String toString() {
         return String.format("%s (worth %d gold) - %s", name, value, description);
     }
