@@ -19,6 +19,22 @@ public abstract class Character {
         this.inventory = new PlayerInventory(10);
     }
     
+  
+    public void takeDamage(int amount) {
+        int reduced = Math.max(amount - defense, 0);
+        health = Math.max(health - reduced, 0);
+        System.out.println(name + " takes " + reduced+ " damage! (" + health + "/" + maxHealth + " HP)");
+    }
+
+    public void heal(int amount) {
+        health = Math.min(health + amount, maxHealth);
+    }
+
+    public boolean isAlive() {
+        return health > 0;
+    }
+
+    
     public String getName() {
         return name;
     }
