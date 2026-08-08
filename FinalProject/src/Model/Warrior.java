@@ -26,7 +26,7 @@ public class Warrior extends Character {
 	public void setArmor(int armor) {
 		this.armor = armor;
 	}
-	
+	@Override
 	public void attack(Enemy target) {
 		int damage = getAttackPower()+getStrength();
 		target.takeDamage(damage);
