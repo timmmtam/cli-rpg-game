@@ -5,8 +5,8 @@ public abstract class Character {
     private int health;
     private int maxHealth;
     private int level;
-    private int attackPower;
-    private int defense;
+    protected int attackPower;
+    protected int defense;
     private Inventory inventory;
     
     public Character(String name, int maxHealth, int level, int attackPower, int defense) {
