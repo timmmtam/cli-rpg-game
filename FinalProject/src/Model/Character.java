@@ -7,7 +7,7 @@ public abstract class Character {
     private int level;
     private int attackPower;
     private int defense;
-    private PlayerInventory inventory;
+    private Inventory inventory;
     
     public Character(String name, int maxHealth, int level, int attackPower, int defense) {
         this.name = name;
@@ -16,7 +16,7 @@ public abstract class Character {
         this.level = level;
         this.attackPower = attackPower;
         this.defense = defense;
-        this.inventory = new PlayerInventory(10);
+        this.inventory = new Inventory(10);
     }
     
   
@@ -84,7 +84,7 @@ public abstract class Character {
     }
 
 
-    public PlayerInventory getInventory() { 
+    public Inventory getInventory() { 
     	return inventory; 
     } 
     public abstract void attack(Enemy target); 
