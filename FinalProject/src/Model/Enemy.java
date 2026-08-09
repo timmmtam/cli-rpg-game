@@ -10,7 +10,7 @@ public abstract class Enemy {
 
     private String name;
     private int health;
-    private int attackPower;
+    protected int attackPower;
     private double lootChance; // 0.0 - 1.0
 
     public Enemy(String name, int health, int attackPower, double lootChance) {
@@ -52,6 +52,8 @@ public abstract class Enemy {
         this.lootChance = lootChance;
     }
     
+    public abstract void attack(Character target);
+
     public Item dropLoot() {
         if (RANDOM.nextDouble() <= lootChance) {
             return new Potion(name + "'s Dropped Potion", "A potion looted from a fallen foe.", 15, 20);
