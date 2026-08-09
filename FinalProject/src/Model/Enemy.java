@@ -10,7 +10,7 @@ public abstract class Enemy {
 
     private String name;
     private int health;
-    private int attackPower;
+    protected int attackPower;
     private double lootChance; // 0.0 - 1.0
 
     public Enemy(String name, int health, int attackPower, double lootChance) {
