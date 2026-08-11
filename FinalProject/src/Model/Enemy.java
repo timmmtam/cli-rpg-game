@@ -11,7 +11,7 @@ public abstract class Enemy {
     private String name;
     private int health;
     protected int attackPower;
-    private double lootChance; // 0.0 - 1.0
+    private double lootChance;
 
     public Enemy(String name, int health, int attackPower, double lootChance) {
         this.name = name;
@@ -56,7 +56,12 @@ public abstract class Enemy {
 
     public Item dropLoot() {
         if (RANDOM.nextDouble() <= lootChance) {
-            return new Potion(name + "'s Dropped Potion", "A potion looted from a fallen foe.", 15, 20);
+            int roll = RANDOM.nextInt(3);
+            return switch (roll) {
+                case 0 -> new Potion(name + "'s Dropped Potion", "A potion looted from a fallen foe.", 15, 20);
+                case 1 -> Weapon.createRandom();
+                default -> new Potion("Minor Health Potion", "A small vial of healing liquid.", 10, 15);
+            };
         }
         return null;
     }
