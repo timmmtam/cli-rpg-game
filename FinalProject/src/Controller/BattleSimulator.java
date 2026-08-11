@@ -1,11 +1,7 @@
 package Controller;
 
-import Model.Character;
-import Model.Enemy;
-import Model.Item;
-import Model.Party;
-import Model.Weapon;
-import Model.Potion;
+import Model.*;
+import View.View;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,20 +9,24 @@ import java.util.Scanner;
 
 public class BattleSimulator {
 
+    private final View view;
+
+    public BattleSimulator(View view) {
+        this.view = view;
+    }
+
     public void startBattle(Party party, List<Enemy> enemies, Scanner scanner) {
-        System.out.println("\n==================================");
-        System.out.println("       A BATTLE HAS STARTED!      ");
-        System.out.println("==================================");
+        view.printBattleStart();
 
         int turnNumber = 1;
 
         while (!party.isPartyDefeated() && !allEnemiesDefeated(enemies)) {
-            System.out.println("\n=== Turn " + turnNumber + " ===");
-            displayStatus(party, enemies);
+            view.printTurnHeader(turnNumber);
+            view.displayStatus(party, enemies);
 
             if (!allEnemiesDefeated(enemies)) {
                 System.out.println("\n>> Choose actions for your party <<");
-                for (Character c : party.getMembers()) {
+                for (Model.Character c : party.getMembers()) {
                     if (!c.isAlive() || allEnemiesDefeated(enemies)) {
                         continue;
                     }
@@ -44,16 +44,11 @@ public class BattleSimulator {
         }
 
         if (party.isPartyDefeated()) {
-            System.out.println("\n==================================");
-            System.out.println("    DEFEAT! The party has fallen. ");
-            System.out.println("==================================");
+            view.printDefeat();
         } else {
-            System.out.println("\n==================================");
-            System.out.println("  VICTORY! All enemies defeated.  ");
-            System.out.println("==================================");
             int goldReward = 50;
             party.setGold(party.getGold() + goldReward);
-            System.out.println("The party earned " + goldReward + " gold!");
+            view.printVictory(goldReward);
         }
     }
 
@@ -66,51 +61,18 @@ public class BattleSimulator {
         return true;
     }
 
-    private void displayStatus(Party party, List<Enemy> enemies) {
-        System.out.println("\n--- Heroes ---");
-        for (Character c : party.getMembers()) {
-            if (c.isAlive()) {
-                if (c instanceof Model.Mage mage) {
-                    System.out.println(c.getName() + " [" + c.getClass().getSimpleName() + "] HP: " + c.getHealth() + "/" + c.getMaxHealth() + " | Mana: " + mage.getMana() + "/" + mage.getMaxMana());
-                } else {
-                    System.out.println(c.getName() + " [" + c.getClass().getSimpleName() + "] HP: " + c.getHealth() + "/" + c.getMaxHealth());
-                }
-            } else {
-                System.out.println(c.getName() + " [" + c.getClass().getSimpleName() + "] - DEAD");
-            }
-        }
-
-        System.out.println("\n--- Enemies ---");
-        for (Enemy e : enemies) {
-            if (e.getHealth() > 0) {
-                System.out.println(e.getName() + " [" + e.getClass().getSimpleName() + "] HP: " + e.getHealth());
-            } else {
-                System.out.println(e.getName() + " [" + e.getClass().getSimpleName() + "] - DEFEATED");
-            }
-        }
-    }
-
-    private boolean executePlayerTurn(Character c, Party party, List<Enemy> enemies, Scanner scanner) {
+    private boolean executePlayerTurn(Model.Character c, Party party, List<Enemy> enemies, Scanner scanner) {
         while (true) {
-            System.out.println("\n" + c.getName() + "'s turn:");
+            view.printPlayerTurnHeader(c.getName());
 
             boolean isHealer = c instanceof Model.Healer;
 
-            if (isHealer) {
-                System.out.println("1. Attack");
-                System.out.println("2. Heal Ally");
-                System.out.println("3. Use Item");
-                System.out.println("0. Quit Battle");
-            } else {
-                System.out.println("1. Attack");
-                System.out.println("2. Use Item");
-                System.out.println("0. Quit Battle");
-            }
+            view.printActionMenu(isHealer);
 
             int action = getValidInput(scanner, 0, isHealer ? 3 : 2);
 
             if (action == 0) {
-                System.out.println("You have fled the battle!");
+                view.printQuitBattle();
                 return true;
             }
 
@@ -133,7 +95,7 @@ public class BattleSimulator {
         }
     }
 
-    private boolean performAttack(Character attacker, List<Enemy> enemies, Scanner scanner) {
+    private boolean performAttack(Model.Character attacker, List<Enemy> enemies, Scanner scanner) {
         List<Enemy> aliveEnemies = new ArrayList<>();
         for (Enemy e : enemies) {
             if (e.getHealth() > 0) {
@@ -142,16 +104,18 @@ public class BattleSimulator {
         }
 
         if (aliveEnemies.isEmpty()) {
-            System.out.println("No enemies to attack!");
+            view.printNoEnemiesToAttack();
             pause(scanner);
             return true;
         }
 
-        System.out.println("Select target:");
-        for (int i = 0; i < aliveEnemies.size(); i++) {
-            System.out.println((i + 1) + ". " + aliveEnemies.get(i).getName() + " [HP: " + aliveEnemies.get(i).getHealth() + "]");
+        List<String> options = new ArrayList<>();
+        for (Enemy e : aliveEnemies) {
+            options.add(e.getName() + " [HP: " + e.getHealth() + "]");
         }
-        System.out.println("0. Cancel");
+
+        System.out.println("Select target:");
+        view.printTargetOptions(options);
 
         int targetChoice = getValidInput(scanner, 0, aliveEnemies.size());
         if (targetChoice == 0) {
@@ -160,7 +124,7 @@ public class BattleSimulator {
         Enemy target = aliveEnemies.get(targetChoice - 1);
 
         int oldHealth = target.getHealth();
-        System.out.println(attacker.getName() + " attacks " + target.getName() + "!");
+        view.printAttackResult(attacker.getName(), target.getName(), 0);
         attacker.attack(target);
         int newHealth = target.getHealth();
         int damage = oldHealth - newHealth;
@@ -169,10 +133,10 @@ public class BattleSimulator {
         }
 
         if (target.getHealth() <= 0) {
-            System.out.println(target.getName() + " has been defeated!");
+            view.printEnemyDefeated(target.getName());
             Item loot = target.dropLoot();
             if (loot != null) {
-                System.out.println("Loot dropped: " + loot.getName());
+                view.printLootDropped(loot.getName());
                 attacker.getInventory().addItem(loot);
             }
         }
@@ -182,40 +146,42 @@ public class BattleSimulator {
     }
 
     private boolean performHeal(Model.Healer healer, Party party, Scanner scanner) {
-        List<Character> aliveAllies = new ArrayList<>();
-        for (Character c : party.getMembers()) {
+        List<Model.Character> aliveAllies = new ArrayList<>();
+        for (Model.Character c : party.getMembers()) {
             if (c.isAlive()) {
                 aliveAllies.add(c);
             }
         }
 
-        System.out.println("Select target to heal:");
-        for (int i = 0; i < aliveAllies.size(); i++) {
-            System.out.println((i + 1) + ". " + aliveAllies.get(i).getName() + " [HP: " + aliveAllies.get(i).getHealth() + "/" + aliveAllies.get(i).getMaxHealth() + "]");
+        List<String> options = new ArrayList<>();
+        for (Model.Character c : aliveAllies) {
+            options.add(c.getName() + " [HP: " + c.getHealth() + "/" + c.getMaxHealth() + "]");
         }
-        System.out.println("0. Cancel");
+
+        System.out.println("Select target to heal:");
+        view.printTargetOptions(options);
 
         int targetChoice = getValidInput(scanner, 0, aliveAllies.size());
         if (targetChoice == 0) {
             return false;
         }
-        Character target = aliveAllies.get(targetChoice - 1);
+        Model.Character target = aliveAllies.get(targetChoice - 1);
 
         int oldHealth = target.getHealth();
         healer.heal(target);
         int newHealth = target.getHealth();
         int healed = newHealth - oldHealth;
-        System.out.println(healer.getName() + " heals " + target.getName() + " for " + healed + " HP!");
+        view.printHealResult(healer.getName(), target.getName(), healed);
 
         pause(scanner);
         return true;
     }
 
-    private boolean performUseItem(Character c, Party party, Scanner scanner) {
+    private boolean performUseItem(Model.Character c, Party party, Scanner scanner) {
         List<Item> items = c.getInventory().getItems();
 
         if (items.isEmpty()) {
-            System.out.println("Inventory is empty!");
+            view.printInventoryEmpty();
             pause(scanner);
             return false;
         }
@@ -233,28 +199,29 @@ public class BattleSimulator {
         Item selectedItem = items.get(itemChoice - 1);
 
         if (selectedItem instanceof Model.Potion) {
-            System.out.println("Select target:");
-            for (int i = 0; i < party.getMembers().size(); i++) {
-                Character target = party.getMembers().get(i);
-                System.out.println((i + 1) + ". " + target.getName() + " [HP: " + target.getHealth() + "/" + target.getMaxHealth() + "]");
+            List<String> options = new ArrayList<>();
+            for (Model.Character target : party.getMembers()) {
+                options.add(target.getName() + " [HP: " + target.getHealth() + "/" + target.getMaxHealth() + "]");
             }
-            System.out.println("0. Cancel");
+
+            System.out.println("Select target:");
+            view.printTargetOptions(options);
 
             int targetChoice = getValidInput(scanner, 0, party.getMembers().size());
             if (targetChoice == 0) {
                 return false;
             }
-            Character target = party.getMembers().get(targetChoice - 1);
+            Model.Character target = party.getMembers().get(targetChoice - 1);
 
             int oldHealth = target.getHealth();
             c.getInventory().useItem(selectedItem, target);
             int newHealth = target.getHealth();
             int healed = newHealth - oldHealth;
-            System.out.println("Used " + selectedItem.getName() + " on " + target.getName() + "!");
-            System.out.println("Healed " + healed + " HP!");
+            view.printItemUsed(selectedItem.getName(), target.getName());
+            view.printHealedAmount(healed);
         } else if (selectedItem instanceof Model.Weapon) {
             c.getInventory().useItem(selectedItem, c);
-            System.out.println("Equipped " + selectedItem.getName() + "!");
+            view.printItemEquipped(selectedItem.getName());
         }
 
         pause(scanner);
@@ -262,13 +229,13 @@ public class BattleSimulator {
     }
 
     private void pause(Scanner scanner) {
-        System.out.print("Press Enter to continue...");
+        view.printPressEnterToContinue();
         scanner.nextLine();
     }
 
     private int getValidInput(Scanner scanner, int min, int max) {
         while (true) {
-            System.out.print("Choice: ");
+            view.printChoicePrompt();
             String input = scanner.nextLine();
             try {
                 int value = Integer.parseInt(input);
@@ -278,24 +245,24 @@ public class BattleSimulator {
             } catch (NumberFormatException e) {
                 // fall through
             }
-            System.out.println("Invalid choice! Please enter a number between " + min + " and " + max + ".");
+            view.printInvalidChoice();
         }
     }
 
     private void executeEnemyTurn(Party party, List<Enemy> enemies, Scanner scanner) {
-        System.out.println("\n>> Enemy's Turn <<");
+        view.printEnemyTurnHeader();
         for (Enemy e : enemies) {
             if (e.getHealth() <= 0) {
                 continue;
             }
 
-            Character target = getAliveCharacter(party);
+            Model.Character target = getAliveCharacter(party);
             if (target == null) {
                 break;
             }
 
             int oldHealth = target.getHealth();
-            System.out.println(e.getName() + " attacks " + target.getName() + "!");
+            view.printEnemyAttack(e.getName(), target.getName());
             e.attack(target);
             int newHealth = target.getHealth();
             int damage = oldHealth - newHealth;
@@ -307,8 +274,8 @@ public class BattleSimulator {
         }
     }
 
-    private Character getAliveCharacter(Party party) {
-        for (Character c : party.getMembers()) {
+    private Model.Character getAliveCharacter(Party party) {
+        for (Model.Character c : party.getMembers()) {
             if (c.isAlive()) {
                 return c;
             }
